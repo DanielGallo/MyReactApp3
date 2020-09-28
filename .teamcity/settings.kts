@@ -123,7 +123,7 @@ object ProductionBuild : BuildType({
         script {
             name = "npm test"
             scriptContent = """
-                npm run test-ci
+                set CI=true && npm run test-ci
             """.trimIndent()
         }
     }
