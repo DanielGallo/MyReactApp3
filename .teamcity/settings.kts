@@ -92,6 +92,10 @@ object Deploy : BuildType({
             artifactRules = "MyReactApp.zip!** => build/"
         }
     }
+
+    requirements {
+        equals("system.agent.name", "Windows Server 2019 (AWS)")
+    }
 })
 
 object ProductionBuild : BuildType({
@@ -137,5 +141,9 @@ object ProductionBuild : BuildType({
             comparison = BuildFailureOnMetric.MetricComparison.LESS
             compareTo = value()
         }
+    }
+
+    requirements {
+        equals("system.agent.name", "Windows Server 2019 (AWS)")
     }
 })
