@@ -1,5 +1,9 @@
 import jetbrains.buildServer.configs.kotlin.v2019_2.*
+import jetbrains.buildServer.configs.kotlin.v2019_2.buildSteps.script
+import jetbrains.buildServer.configs.kotlin.v2019_2.failureConditions.BuildFailureOnMetric
+import jetbrains.buildServer.configs.kotlin.v2019_2.failureConditions.failOnMetricChange
 import jetbrains.buildServer.configs.kotlin.v2019_2.triggers.vcs
+import jetbrains.buildServer.configs.kotlin.v2019_2.vcs.GitVcsRoot
 
 /*
 The settings script is an entry point for defining a TeamCity
@@ -23,6 +27,7 @@ To debug in IntelliJ Idea, open the 'Maven Projects' tool window (View
 'Debug' option is available in the context menu for the task.
 */
 
+/*
 version = "2020.1"
 
 project {
@@ -39,6 +44,98 @@ object Build : BuildType({
 
     triggers {
         vcs {
+        }
+    }
+})*/
+
+version = "2020.1"
+
+project {
+
+    buildType(ProductionBuild)
+    buildType(Deploy)
+}
+
+object Deploy : BuildType({
+    name = "Deploy"
+
+    enablePersonalBuilds = false
+    type = BuildTypeSettings.Type.DEPLOYMENT
+    maxRunningBuilds = 1
+
+/*    params {
+        password("AWSAccessKeyId", "******", display = ParameterDisplay.HIDDEN)
+        password("AWSSecretAccessKey", "******", display = ParameterDisplay.HIDDEN)
+    }*/
+
+    vcs {
+        checkoutMode = CheckoutMode.MANUAL
+    }
+
+    steps {
+        script {
+            name = "Deploy to S3"
+            scriptContent = """
+                export AWS_ACCESS_KEY_ID=%AWSAccessKeyId%
+                export AWS_SECRET_ACCESS_KEY=%AWSSecretAccessKey%
+                export AWS_DEFAULT_REGION=us-east-1
+                
+                aws s3 sync build/ s3://danielgallo-teamcity/
+            """.trimIndent()
+            dockerImage = "amazon/aws-cli:latest"
+        }
+    }
+
+    dependencies {
+        artifacts(ProductionBuild) {
+            buildRule = lastSuccessful()
+            artifactRules = "MyReactApp.zip!** => build/"
+        }
+    }
+})
+
+object ProductionBuild : BuildType({
+    name = "Production Build"
+
+    artifactRules = "build => MyReactApp.zip"
+
+    vcs {
+        root(DslContext.settingsRoot)
+    }
+
+    steps {
+        script {
+            name = "npm install"
+            scriptContent = """
+                npm install
+            """.trimIndent()
+        }
+        script {
+            name = "npm build"
+            scriptContent = """
+                npm run build
+            """.trimIndent()
+        }
+        script {
+            name = "npm test"
+            scriptContent = """
+                npm run test-ci
+            """.trimIndent()
+        }
+    }
+
+    triggers {
+        vcs {
+        }
+    }
+
+    failureConditions {
+        failOnMetricChange {
+            metric = BuildFailureOnMetric.MetricType.ARTIFACT_SIZE
+            threshold = 1000
+            units = BuildFailureOnMetric.MetricUnit.DEFAULT_UNIT
+            comparison = BuildFailureOnMetric.MetricComparison.LESS
+            compareTo = value()
         }
     }
 })
