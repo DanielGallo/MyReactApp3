@@ -63,10 +63,10 @@ object Deploy : BuildType({
     type = BuildTypeSettings.Type.DEPLOYMENT
     maxRunningBuilds = 1
 
-/*    params {
+    params {
         password("AWSAccessKeyId", "******", display = ParameterDisplay.HIDDEN)
         password("AWSSecretAccessKey", "******", display = ParameterDisplay.HIDDEN)
-    }*/
+    }
 
     vcs {
         checkoutMode = CheckoutMode.MANUAL
