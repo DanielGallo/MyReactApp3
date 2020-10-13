@@ -93,9 +93,9 @@ object Deploy : BuildType({
         }
     }
 
-    requirements {
+/*    requirements {
         equals("system.agent.name", "Windows Server 2019 (AWS)")
-    }
+    }*/
 })
 
 object ProductionBuild : BuildType({
