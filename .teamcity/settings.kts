@@ -63,10 +63,10 @@ object Deploy : BuildType({
     type = BuildTypeSettings.Type.DEPLOYMENT
     maxRunningBuilds = 1
 
-    params {
+/*    params {
         password("AWSAccessKeyId", "******", display = ParameterDisplay.HIDDEN)
         password("AWSSecretAccessKey", "******", display = ParameterDisplay.HIDDEN)
-    }
+    }*/
 
     vcs {
         checkoutMode = CheckoutMode.MANUAL
@@ -76,8 +76,8 @@ object Deploy : BuildType({
         script {
             name = "Deploy to S3"
             scriptContent = """
-                export AWS_ACCESS_KEY_ID=%AWSAccessKeyId%
-                export AWS_SECRET_ACCESS_KEY=%AWSSecretAccessKey%
+                export AWS_ACCESS_KEY_ID=%env.AWSAccessKeyId%
+                export AWS_SECRET_ACCESS_KEY=%env.AWSSecretAccessKey%
                 export AWS_DEFAULT_REGION=us-east-1
                 
                 aws s3 sync build/ s3://danielgallo-teamcity/
